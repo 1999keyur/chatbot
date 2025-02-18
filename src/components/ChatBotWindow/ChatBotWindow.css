@@ -38,6 +38,7 @@
 .chatbot-messages-area {
   flex: 1;
   padding: 10px;
+  min-height:10em;
   overflow-y: auto;
 }
 .chat-message-wrapper {
