@@ -1,31 +1,36 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Button } from "antd";
+import { Button, Input } from "antd";
 import {
-  CloseOutlined,
+  DownOutlined,
   RobotOutlined,
   UserOutlined,
   SendOutlined,
 } from "@ant-design/icons";
 import "./ChatBotWindow.css";
-import CustomInput from "../CustomInput/CustomInput";
 
-const ChatBotWindow = ({ onClose }) => {
-  const API_URL = import.meta.env.VITE_API_URL;
-  const [messages, setMessages] = useState([
-    { sender: "bot", text: "Hey there 👋\nHow can I help you today?" },
-  ]);
+const ChatBotWindow = ({ onMinimize, onEndChat }) => {
+  // Load initial messages from localStorage if available
+  const storedMessages = localStorage.getItem("chatMessages");
+  const initialMessages = storedMessages
+    ? JSON.parse(storedMessages)
+    : [{ sender: "bot", text: "Hey there 👋\nHow can I help you today?" }];
+
+  const [messages, setMessages] = useState(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const messagesEndRef = useRef(null);
-
   const inputRef = useRef(null);
 
+  // Auto-scroll and store messages to localStorage on update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    if (!isLoading && inputRef.current) {
-      inputRef.current.focus({ cursor: "end" });
-    }
+    localStorage.setItem("chatMessages", JSON.stringify(messages));
+  }, [messages]);
+
+  // Always focus input after message update
+  useEffect(() => {
+    inputRef.current?.focus();
   }, [messages, isLoading]);
 
   const handleSend = async () => {
@@ -36,16 +41,16 @@ const ChatBotWindow = ({ onClose }) => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(API_URL, {
+      const response = await fetch(import.meta.env.VITE_API_URL, {
+        // Update endpoint if needed
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: input }),
       });
       const data = await response.json();
-
       const botMessage = {
         sender: "bot",
-        text: data.reply || "I am sorry, I could not generate a response.",
+        text: data.reply || "I could not generate a response.",
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
@@ -65,21 +70,40 @@ const ChatBotWindow = ({ onClose }) => {
     if (e.key === "Enter") handleSend();
   };
 
+  // End Chat: clear localStorage and reset chat history
+  const handleEndChat = () => {
+    localStorage.removeItem("chatMessages");
+    setMessages([
+      { sender: "bot", text: "Hey there 👋\nHow can I help you today?" },
+    ]);
+    if (onEndChat) onEndChat();
+  };
+
   return (
     <div className="chatbot-window-container">
+      {/* Header with Minimize and End Chat buttons */}
       <div className="chatbot-header">
         <div className="chatbot-header-title">
           <RobotOutlined style={{ marginRight: 8 }} />
           Chatbot
         </div>
-        <Button
-          type="text"
-          icon={<CloseOutlined style={{ fontSize: "16px", color: "#fff" }} />}
-          onClick={onClose}
-          className="chatbot-close-btn"
-        />
+        <div className="chatbot-header-buttons">
+          <Button
+            type="text"
+            onClick={handleEndChat}
+            style={{ color: "#fff", marginLeft: 8 }}
+          >
+            End Chat
+          </Button>
+          <Button
+            type="text"
+            icon={<DownOutlined style={{ fontSize: "16px", color: "#fff" }} />}
+            onClick={onMinimize}
+          />
+        </div>
       </div>
 
+      {/* Chat Messages Area */}
       <div className="chatbot-messages-area">
         {messages.map((msg, idx) => {
           const isBot = msg.sender === "bot";
@@ -105,7 +129,6 @@ const ChatBotWindow = ({ onClose }) => {
             </div>
           );
         })}
-
         {isLoading && (
           <div className="chat-message-wrapper bot">
             <div className="chat-icon">
@@ -119,8 +142,9 @@ const ChatBotWindow = ({ onClose }) => {
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Input Area */}
       <div className="chatbot-input-area">
-        <CustomInput
+        <Input
           ref={inputRef}
           placeholder="Message..."
           value={input}
