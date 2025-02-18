@@ -27,7 +27,9 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
   }, [messages]);
 
   useEffect(() => {
-    inputRef.current?.focus();
+    if (window.innerWidth >= 600) {
+      inputRef.current?.focus();
+    }
   }, [messages, isLoading]);
 
   const handleSend = async () => {
@@ -93,7 +95,7 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
           <Button
             type="text"
             onClick={handleEndChat}
-            style={{ color: "#fff", marginLeft: 8 }}
+            style={{ color: "#007bff", marginLeft: 8, background: "#ffff" }}
           >
             End Chat
           </Button>
