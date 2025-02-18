@@ -1,5 +1,5 @@
 import "./App.css";
-import ChatBotWrapper from "./components/chatBotWrapper/chatBotWrapper";
+import ChatBotWrapper from "./components/ChatBotWrapper/ChatBotWrapper";
 
 function App() {
   return (
