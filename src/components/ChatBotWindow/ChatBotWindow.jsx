@@ -9,7 +9,6 @@ import {
 import "./ChatBotWindow.css";
 
 const ChatBotWindow = ({ onMinimize, onEndChat }) => {
-  // Load initial messages from localStorage if available
   const storedMessages = localStorage.getItem("chatMessages");
   const initialMessages = storedMessages
     ? JSON.parse(storedMessages)
@@ -22,13 +21,11 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Auto-scroll and store messages to localStorage on update
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     localStorage.setItem("chatMessages", JSON.stringify(messages));
   }, [messages]);
 
-  // Always focus input after message update
   useEffect(() => {
     inputRef.current?.focus();
   }, [messages, isLoading]);
@@ -42,15 +39,22 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
 
     try {
       const response = await fetch(import.meta.env.VITE_API_URL, {
-        // Update endpoint if needed
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: input }],
+            },
+          ],
+        }),
       });
       const data = await response.json();
       const botMessage = {
         sender: "bot",
-        text: data.reply || "I could not generate a response.",
+        text:
+          data?.candidates[0]?.content?.parts[0]?.text ||
+          "I could not generate a response.",
       };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
@@ -70,7 +74,6 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
     if (e.key === "Enter") handleSend();
   };
 
-  // End Chat: clear localStorage and reset chat history
   const handleEndChat = () => {
     localStorage.removeItem("chatMessages");
     setMessages([
@@ -81,7 +84,6 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
 
   return (
     <div className="chatbot-window-container">
-      {/* Header with Minimize and End Chat buttons */}
       <div className="chatbot-header">
         <div className="chatbot-header-title">
           <RobotOutlined style={{ marginRight: 8 }} />
@@ -103,7 +105,6 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
         </div>
       </div>
 
-      {/* Chat Messages Area */}
       <div className="chatbot-messages-area">
         {messages.map((msg, idx) => {
           const isBot = msg.sender === "bot";
@@ -142,7 +143,6 @@ const ChatBotWindow = ({ onMinimize, onEndChat }) => {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
       <div className="chatbot-input-area">
         <Input
           ref={inputRef}

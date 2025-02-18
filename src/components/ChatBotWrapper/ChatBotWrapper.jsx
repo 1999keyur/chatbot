@@ -14,13 +14,11 @@ const ChatBotWrapper = () => {
   };
 
   const handleMinimize = () => {
-    // Simply minimize (hide window) but keep chat history
     setMinimized(true);
     setVisible(false);
   };
 
   const handleEndChat = () => {
-    // End chat clears history and closes the window
     setVisible(false);
     setMinimized(false);
   };
@@ -30,7 +28,6 @@ const ChatBotWrapper = () => {
       {visible && (
         <ChatBotWindow onMinimize={handleMinimize} onEndChat={handleEndChat} />
       )}
-      {/* Show open chat button if not visible and not minimized */}
       {!visible && !minimized && (
         <Button
           type="primary"
@@ -41,7 +38,6 @@ const ChatBotWrapper = () => {
           onClick={handleOpen}
         />
       )}
-      {/* If minimized, show a minimized chat icon */}
       {minimized && (
         <div className="chatbot-minimized" onClick={handleOpen}>
           <MessageOutlined style={{ fontSize: 24, color: "#fff" }} />
